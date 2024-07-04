@@ -1,4 +1,4 @@
-module github.com/dyaksa/sqlx-encrypt
+module github.com/dyaksa/encryption-pii
 
 go 1.22.1
 

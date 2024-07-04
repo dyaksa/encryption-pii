@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/dyaksa/sqlx-encrypt/crypt"
+	"github.com/dyaksa/encryption-pii/crypt"
 )
 
 type CMD struct {

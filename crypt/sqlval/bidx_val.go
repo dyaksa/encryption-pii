@@ -7,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/dyaksa/sqlx-encrypt/crypt"
+	"github.com/dyaksa/encryption-pii/crypt"
 )
 
 var _ driver.Value = BIDX[any, crypt.BIDX]{}

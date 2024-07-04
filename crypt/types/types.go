@@ -3,8 +3,8 @@ package types
 import (
 	"time"
 
-	"github.com/dyaksa/sqlx-encrypt/crypt"
-	"github.com/dyaksa/sqlx-encrypt/crypt/sqlval"
+	"github.com/dyaksa/encryption-pii/crypt"
+	"github.com/dyaksa/encryption-pii/crypt/sqlval"
 )
 
 // type aliases so that it can be used by sqlc

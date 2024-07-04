@@ -1,8 +1,8 @@
 package crypt
 
 import (
-	"github.com/dyaksa/sqlx-encrypt/cmd"
-	"github.com/dyaksa/sqlx-encrypt/crypt"
+	"github.com/dyaksa/encryption-pii/cmd"
+	"github.com/dyaksa/encryption-pii/crypt"
 	"github.com/google/uuid"
 )
 

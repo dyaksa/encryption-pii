@@ -8,7 +8,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/dyaksa/sqlx-encrypt/crypt"
+	"github.com/dyaksa/encryption-pii/crypt"
 	"github.com/tink-crypto/tink-go/v2/tink"
 )
 
