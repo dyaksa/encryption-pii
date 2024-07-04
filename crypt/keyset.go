@@ -2,14 +2,15 @@ package crypt
 
 import (
 	"fmt"
+	"os"
+	"sync"
+
 	"github.com/tink-crypto/tink-go/v2/aead"
 	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
 	"github.com/tink-crypto/tink-go/v2/keyderivation"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/mac"
 	"github.com/tink-crypto/tink-go/v2/tink"
-	"os"
-	"sync"
 )
 
 type Primitive interface {
