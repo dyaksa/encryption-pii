@@ -14,7 +14,7 @@ import (
 )
 
 type Primitive interface {
-	PrimitiveAEAD | PrimitiveMAC | PrimitiveBIDX
+	PrimitiveAEAD | PrimitiveMAC | PrimitiveBIDX | PrimitiveHMAC
 }
 
 type NewPrimitive[T Primitive] func(*keyset.Handle) (T, error)
@@ -44,6 +44,15 @@ func NewPrimitiveBIDXWithLen(len int) func(h *keyset.Handle) (p PrimitiveBIDX, e
 		p.BIDX, err = NewBIDX(h, len)
 		return
 	}
+}
+
+type PrimitiveHMAC struct{ HMAC }
+
+// NewPrimitiveHMAC creates a new instance of PrimitiveHMAC using the provided keyset handle.
+// It returns the created PrimitiveHMAC and any error encountered during the creation process.
+func NewPrimitiveHMAC(h *keyset.Handle) (p PrimitiveHMAC, err error) {
+	p.HMAC, err = NewHMAC(h)
+	return
 }
 
 type DerivableKeyset[T Primitive] struct {
@@ -145,17 +154,3 @@ func (m *DerivableKeyset[T]) GetPrimitiveNHandleFunc(deriveKey []byte) func() (T
 		return m.GetPrimitiveNHandle(deriveKey)
 	}
 }
-
-// type PrimitiveAES struct{ AES128CBC }
-
-// func NewPrimitiveAES128CBC(h *keyset.Handle) (p PrimitiveAES, err error) {
-// 	p.AES128CBC, err = NewAES128CBCEncrypter(h)
-// 	return
-// }
-
-// type PrimitiveHMAC struct{ HMACSHA256 }
-
-// func NewPrimitiveHMACSHA256(h *keyset.Handle) (p PrimitiveHMAC, err error) {
-// 	p.HMACSHA256, err = NewHMACSHA256Verifier(h)
-// 	return
-// }

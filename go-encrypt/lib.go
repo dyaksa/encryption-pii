@@ -9,6 +9,7 @@ import (
 type Lib struct {
 	aead *crypt.DerivableKeyset[crypt.PrimitiveAEAD]
 	bidx *crypt.DerivableKeyset[crypt.PrimitiveBIDX]
+	hmac *crypt.DerivableKeyset[crypt.PrimitiveHMAC]
 }
 
 func New() (l *Lib, err error) {
@@ -25,6 +26,11 @@ func New() (l *Lib, err error) {
 	}
 
 	l.bidx, err = cmd.MACDerivableKeyset()
+	if err != nil {
+		return nil, err
+	}
+
+	l.hmac, err = cmd.HMACDerivableKeyset()
 	if err != nil {
 		return nil, err
 	}
@@ -46,4 +52,8 @@ func (l *Lib) AEADFunc(id uuid.UUID) func() (crypt.PrimitiveAEAD, error) {
 
 func (l *Lib) BIDXFunc(id uuid.UUID) func() (crypt.PrimitiveBIDX, error) {
 	return l.bidx.GetPrimitiveFunc(id[:])
+}
+
+func (l *Lib) HMACFunc(id uuid.UUID) func() (crypt.PrimitiveHMAC, error) {
+	return l.hmac.GetPrimitiveFunc(id[:])
 }
