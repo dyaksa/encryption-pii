@@ -16,26 +16,26 @@ type HMAC[T any, B crypt.HMAC] struct {
 	v        T
 }
 
-func (s HMAC[T, H]) Value() (v []byte, err error) {
+func (s HMAC[T, H]) Hash() []byte {
 	m, err := s.hmacFunc()
 	if err != nil {
-		return nil, fmt.Errorf("fail to obtain HMAC primitive: %w", err)
+		return nil
 	}
 
 	s.b, err = s.btov(s.v)
 	if err != nil {
-		return nil, fmt.Errorf("fail to convert to byte: %w", err)
+		return nil
 	}
 
 	fullHMAC, err := m.ComputePrimary(s.b)
 	if err != nil {
-		return nil, fmt.Errorf("fail to compute HMAC: %w", err)
+		return nil
 	}
 
 	if len(fullHMAC) >= 8 {
-		return fullHMAC[len(fullHMAC)-8:], nil
+		return fullHMAC[len(fullHMAC)-8:]
 	} else {
-		return fullHMAC, nil
+		return fullHMAC
 	}
 }
 
