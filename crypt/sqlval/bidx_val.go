@@ -61,6 +61,14 @@ func (s BIDX[T, M]) ForRead(w BIDXReadWrapper) BIDX[T, M] {
 	return s
 }
 
+func (s *BIDX[T, B]) To() T {
+	return s.t
+}
+
+func (s *BIDX[T, B]) ToP() *T {
+	return &s.t
+}
+
 func BIDXByteArray[B crypt.BIDX](f BIDXFunc[B], s []byte) BIDX[[]byte, B] {
 	return BIDX[[]byte, B]{
 		bidxFunc: f,

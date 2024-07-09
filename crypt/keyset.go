@@ -17,7 +17,7 @@ type Primitive interface {
 	PrimitiveAEAD | PrimitiveMAC | PrimitiveBIDX
 }
 
-type NewPrimitive[T Primitive] func(handle *keyset.Handle) (T, error)
+type NewPrimitive[T Primitive] func(*keyset.Handle) (T, error)
 
 type PrimitiveAEAD struct{ tink.AEAD }
 
@@ -39,7 +39,6 @@ func NewPrimitiveBIDX(h *keyset.Handle) (p PrimitiveBIDX, err error) {
 	p.BIDX, err = NewBIDX(h, 0)
 	return
 }
-
 func NewPrimitiveBIDXWithLen(len int) func(h *keyset.Handle) (p PrimitiveBIDX, err error) {
 	return func(h *keyset.Handle) (p PrimitiveBIDX, err error) {
 		p.BIDX, err = NewBIDX(h, len)
@@ -120,29 +119,43 @@ func (m *DerivableKeyset[T]) GetPrimitive(deriveKey []byte) (p T, err error) {
 	return
 }
 
+func (m *DerivableKeyset[T]) GetPrimitiveNHandle(deriveKey []byte) (p T, h *keyset.Handle, err error) {
+	h, err = m.GetHandle(deriveKey)
+	if err != nil {
+		return
+	}
+	p, err = m.GetPrimitive(deriveKey)
+	return
+}
+
 func (m *DerivableKeyset[T]) GetPrimitiveFunc(deriveKey []byte) func() (T, error) {
 	return func() (T, error) {
 		return m.GetPrimitive(deriveKey)
 	}
 }
 
-//func (m *DerivableKeyset[T]) GetPrimitiveNHandle(deriveKey []byte) (p T, h *keyset.Handle, err error) {
-//	h, err = m.GetHandle(deriveKey)
-//	if err != nil {
-//		return
-//	}
-//	p, err = m.GetPrimitive(deriveKey)
-//	return
-//}
+func (m *DerivableKeyset[T]) GetHandleFunc(deriveKey []byte) func() (*keyset.Handle, error) {
+	return func() (*keyset.Handle, error) {
+		return m.GetHandle(deriveKey)
+	}
+}
 
-//func (m *DerivableKeyset[T]) GetHandleFunc(deriveKey []byte) func() (*keyset.Handle, error) {
-//	return func() (*keyset.Handle, error) {
-//		return m.GetHandle(deriveKey)
-//	}
-//}
-//
-//func (m *DerivableKeyset[T]) GetPrimitiveNHandleFunc(deriveKey []byte) func() (T, *keyset.Handle, error) {
-//	return func() (t T, h *keyset.Handle, err error) {
-//		return m.GetPrimitiveNHandle(deriveKey)
-//	}
-//}
+func (m *DerivableKeyset[T]) GetPrimitiveNHandleFunc(deriveKey []byte) func() (T, *keyset.Handle, error) {
+	return func() (t T, h *keyset.Handle, err error) {
+		return m.GetPrimitiveNHandle(deriveKey)
+	}
+}
+
+// type PrimitiveAES struct{ AES128CBC }
+
+// func NewPrimitiveAES128CBC(h *keyset.Handle) (p PrimitiveAES, err error) {
+// 	p.AES128CBC, err = NewAES128CBCEncrypter(h)
+// 	return
+// }
+
+// type PrimitiveHMAC struct{ HMACSHA256 }
+
+// func NewPrimitiveHMACSHA256(h *keyset.Handle) (p PrimitiveHMAC, err error) {
+// 	p.HMACSHA256, err = NewHMACSHA256Verifier(h)
+// 	return
+// }
