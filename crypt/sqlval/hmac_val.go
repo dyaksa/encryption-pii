@@ -12,31 +12,53 @@ type HMAC[T any, B crypt.HMAC] struct {
 	hmacFunc HMACFunc[B]
 	btov     func(T) ([]byte, error)
 	b        []byte
+	hmac     []byte
 	isNil    bool
 	v        T
 }
 
-func (s HMAC[T, H]) Hash() []byte {
+func (s HMAC[T, B]) Hash() (b []byte) {
 	m, err := s.hmacFunc()
 	if err != nil {
-		return nil
+		return
 	}
 
 	s.b, err = s.btov(s.v)
 	if err != nil {
-		return nil
+		return
 	}
 
-	fullHMAC, err := m.ComputePrimary(s.b)
+	s.hmac, err = m.ComputePrimary(s.b)
 	if err != nil {
-		return nil
+		return
 	}
 
-	if len(fullHMAC) >= 8 {
-		return fullHMAC[len(fullHMAC)-8:]
-	} else {
-		return fullHMAC
+	b = s.hmac
+	return
+}
+
+func (s HMAC[T, H]) HashString() (str string) {
+	m, err := s.hmacFunc()
+	if err != nil {
+		return
 	}
+
+	s.b, err = s.btov(s.v)
+	if err != nil {
+		return
+	}
+
+	s.hmac, err = m.ComputePrimary(s.b)
+	if err != nil {
+		return
+	}
+
+	str = fmt.Sprintf("%x", s.hmac)
+	lenStr := len(str)
+	if lenStr > 8 {
+		str = str[lenStr-8:]
+	}
+	return
 }
 
 func (s *HMAC[T, H]) Verify(src []byte) (err error) {
