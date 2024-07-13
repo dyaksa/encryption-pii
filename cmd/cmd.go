@@ -10,6 +10,7 @@ type CMD struct {
 	MACDerivableKeysetPath    *string `env:"MAC_DERIVABLE_KEYSET_PATH,expand" json:"mac_derivable_keyset_path"`
 	AEADDerivableKeysetPath   *string `env:"AEAD_DERIVABLE_KEYSET_PATH,expand" json:"aead_derivable_keyset_path"`
 	HMACSHA256DerivableKeySet *string `env:"HMAC_SHA256_DERIVABLE_KEYSET,expand" json:"hmac_derivable_keyset"`
+	DeriverKey                string  `env:"DERIVER_KEY,expand" envDefault:"c2aaf7c8-50b5-435f-9a6a-fe1f22ce2d82" json:"deriver_key"`
 
 	getAEAD func() (*crypt.DerivableKeyset[crypt.PrimitiveAEAD], error)
 	getBIDX func() (*crypt.DerivableKeyset[crypt.PrimitiveBIDX], error)

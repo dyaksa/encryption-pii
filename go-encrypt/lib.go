@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/dyaksa/encryption-pii/cmd"
 	"github.com/dyaksa/encryption-pii/crypt"
@@ -29,12 +30,12 @@ type Lib struct {
 func New() (l *Lib, err error) {
 	l = &Lib{}
 
-	l.deriverKey, err = uuid.Parse("c2aaf7c8-50b5-435f-9a6a-fe1f22ce2d82")
+	cmd, err := l.initCMD()
 	if err != nil {
 		return nil, err
 	}
 
-	cmd, err := l.initCMD()
+	l.deriverKey, err = uuid.Parse(cmd.DeriverKey)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +90,52 @@ func (l *Lib) HMAC() func() (crypt.PrimitiveHMAC, error) {
 	return l.HMACFunc(l.deriverKey)
 }
 
+func (l *Lib) AEADByteArray(param []byte) sqlval.AEAD[[]byte, crypt.PrimitiveAEAD] {
+	return sqlval.AEADByteArray(l.AEAD(), param, l.deriverKey[:])
+}
+
+func (l *Lib) ByteToArray() sqlval.AEAD[[]byte, crypt.PrimitiveAEAD] {
+	return l.AEADByteArray([]byte{})
+}
+
 func (l *Lib) AEADString(param string) sqlval.AEAD[string, crypt.PrimitiveAEAD] {
 	return sqlval.AEADString(l.AEAD(), param, l.deriverKey[:])
+}
+
+func (l *Lib) BToString() sqlval.AEAD[string, crypt.PrimitiveAEAD] {
+	return l.AEADString("")
+}
+
+func (l *Lib) AEADTime(param time.Time) sqlval.AEAD[time.Time, crypt.PrimitiveAEAD] {
+	return sqlval.AEADTime(l.AEAD(), param, l.deriverKey[:])
+}
+
+func (l *Lib) BToTime() sqlval.AEAD[time.Time, crypt.PrimitiveAEAD] {
+	return l.AEADTime(time.Time{})
+}
+
+func (l *Lib) AEADBool(param bool) sqlval.AEAD[bool, crypt.PrimitiveAEAD] {
+	return sqlval.AEADBool(l.AEAD(), param, l.deriverKey[:])
+}
+
+func (l *Lib) BToBool() sqlval.AEAD[bool, crypt.PrimitiveAEAD] {
+	return l.AEADBool(false)
+}
+
+func (l *Lib) AEADFloat64(param float64) sqlval.AEAD[float64, crypt.PrimitiveAEAD] {
+	return sqlval.AEADFloat64(l.AEAD(), param, l.deriverKey[:])
+}
+
+func (l *Lib) BToFloat64() sqlval.AEAD[float64, crypt.PrimitiveAEAD] {
+	return l.AEADFloat64(0)
+}
+
+func (l *Lib) AEADInt64(param int64) sqlval.AEAD[int64, crypt.PrimitiveAEAD] {
+	return sqlval.AEADInt64(l.AEAD(), param, l.deriverKey[:])
+}
+
+func (l *Lib) BToInt64() sqlval.AEAD[int64, crypt.PrimitiveAEAD] {
+	return l.AEADInt64(0)
 }
 
 func (l *Lib) BIDXString(param string) sqlval.BIDX[string, crypt.PrimitiveBIDX] {
@@ -111,7 +156,6 @@ func (l *Lib) SaveToHeap(ctx context.Context, tx *sql.Tx, textHeaps []TextHeap) 
 			_, err = tx.ExecContext(ctx, query.String(), th.Content, th.Hash.HashString())
 		}
 	}
-
 	return
 }
 
