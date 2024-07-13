@@ -169,6 +169,52 @@ type FindTextHeapRow struct {
 	Hash    string
 }
 
+type FindTextHeapByContentParams struct {
+	Content string
+}
+
+func (l *Lib) SearchContents(ctx context.Context, tx *sql.Tx, column string, args func(FindTextHeapByContentParams) (bool, error)) (heaps []string, err error) {
+	var query = new(strings.Builder)
+	query.WriteString("SELECT content FROM ")
+	query.WriteString(column)
+	query.WriteString(" WHERE content ILIKE $1")
+	var rows *sql.Rows
+	var arg FindTextHeapByContentParams
+	if args != nil {
+		if ok, _ := args(arg); !ok {
+			return
+		}
+	}
+	rows, err = tx.QueryContext(ctx, query.String(), arg.Content)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var i FindTextHeapRow
+		err = rows.Scan(&i.Content)
+		if err != nil {
+			return
+		}
+		heaps = append(heaps, i.Content)
+	}
+	return
+}
+
+func (l *Lib) BuildHeap(value string, typeHeap string) (s string, th []TextHeap) {
+	var values = split(value)
+	builder := new(strings.Builder)
+	for _, value := range values {
+		builder.WriteString(l.HMACString(value).HashString())
+		th = append(th, TextHeap{
+			Content: strings.ToLower(value),
+			Type:    typeHeap,
+			Hash:    l.HMACString(value),
+		})
+	}
+	return builder.String(), th
+}
+
 func isHashExist(ctx context.Context, tx *sql.Tx, typeHeap string, args FindTextHeapByHashParams) (bool, error) {
 	var query = new(strings.Builder)
 	query.WriteString("SELECT hash FROM ")
@@ -184,20 +230,6 @@ func isHashExist(ctx context.Context, tx *sql.Tx, typeHeap string, args FindText
 		return true, nil
 	}
 	return false, nil
-}
-
-func (l *Lib) BuildHeap(value string, typeHeap string) (s string, th []TextHeap) {
-	var values = split(value)
-	builder := new(strings.Builder)
-	for _, value := range values {
-		builder.WriteString(l.HMACString(value).HashString())
-		th = append(th, TextHeap{
-			Content: strings.ToLower(value),
-			Type:    typeHeap,
-			Hash:    l.HMACString(value),
-		})
-	}
-	return builder.String(), th
 }
 
 func split(value string) (s []string) {
