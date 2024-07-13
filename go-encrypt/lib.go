@@ -148,7 +148,7 @@ func (l *Lib) BuildHeap(value string, typeHeap string) (s string, th []TextHeap)
 	for _, value := range values {
 		builder.WriteString(l.HMACString(value).HashString())
 		th = append(th, TextHeap{
-			Content: value,
+			Content: strings.ToLower(value),
 			Type:    typeHeap,
 			Hash:    l.HMACString(value),
 		})
