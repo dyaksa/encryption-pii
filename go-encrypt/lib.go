@@ -175,21 +175,21 @@ type FindTextHeapByContentParams struct {
 
 func (l *Lib) SearchContents(ctx context.Context, tx *sql.Tx, column string, args FindTextHeapByContentParams) (heaps []string, err error) {
 	var query = new(strings.Builder)
-	query.WriteString("SELECT content FROM ")
+	query.WriteString("SELECT content, hash FROM ")
 	query.WriteString(column)
 	query.WriteString(" WHERE content ILIKE $1")
-	rows, err := tx.QueryContext(ctx, query.String(), args.Content)
+	rows, err := tx.QueryContext(ctx, query.String(), "%"+args.Content+"%")
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var i FindTextHeapRow
-		err = rows.Scan(&i.Content)
+		err = rows.Scan(&i.Content, &i.Hash)
 		if err != nil {
 			return
 		}
-		heaps = append(heaps, i.Content)
+		heaps = append(heaps, i.Hash)
 	}
 	return
 }
