@@ -34,37 +34,34 @@ func (l *Lib) InsertWithHeap(ctx context.Context, tx *sql.Tx, tableName string, 
 		if field.Tag.Get("bidx_col") != "" {
 			fieldNames = append(fieldNames, field.Tag.Get("bidx_col"))
 			placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
-		}
 
-		switch entityValue.Field(i).Interface().(type) {
-		case types.AEADString:
-			fieldValue := entityValue.Field(i).Interface().(types.AEADString)
-			str, heaps := l.BuildHeap(fieldValue.To(), field.Tag.Get("txt_heap_table"))
-			th = append(th, heaps...)
-			args = append(args, str)
-		case types.AEADInt64:
-			fieldValue := entityValue.Field(i).Interface().(types.AEADInt64)
-			str, heaps := l.BuildHeap(fmt.Sprintf("%d", fieldValue.To()), field.Tag.Get("txt_heap_table"))
-			th = append(th, heaps...)
-			args = append(args, str)
-		case types.AEADFloat64:
-			fieldValue := entityValue.Field(i).Interface().(types.AEADFloat64)
-			str, heaps := l.BuildHeap(fmt.Sprintf("%f", fieldValue.To()), field.Tag.Get("txt_heap_table"))
-			th = append(th, heaps...)
-			args = append(args, str)
-		case types.AEADTime:
-			fieldValue := entityValue.Field(i).Interface().(types.AEADTime)
-			str, heaps := l.BuildHeap(fieldValue.To().String(), field.Tag.Get("txt_heap_table"))
-			th = append(th, heaps...)
-			args = append(args, str)
-		case types.AEADBool:
-			fieldValue := entityValue.Field(i).Interface().(types.AEADBool)
-			str, heaps := l.BuildHeap(fmt.Sprintf("%t", fieldValue.To()), field.Tag.Get("txt_heap_table"))
-			th = append(th, heaps...)
-			args = append(args, str)
-		case types.BIDXString:
-			fieldValue := entityValue.Field(i).Interface().(types.BIDXString)
-			args = append(args, fieldValue)
+			switch entityValue.Field(i).Interface().(type) {
+			case types.AEADString:
+				fieldValue := entityValue.Field(i).Interface().(types.AEADString)
+				str, heaps := l.BuildHeap(fieldValue.To(), field.Tag.Get("txt_heap_table"))
+				th = append(th, heaps...)
+				args = append(args, str)
+			case types.AEADInt64:
+				fieldValue := entityValue.Field(i).Interface().(types.AEADInt64)
+				str, heaps := l.BuildHeap(fmt.Sprintf("%d", fieldValue.To()), field.Tag.Get("txt_heap_table"))
+				th = append(th, heaps...)
+				args = append(args, str)
+			case types.AEADFloat64:
+				fieldValue := entityValue.Field(i).Interface().(types.AEADFloat64)
+				str, heaps := l.BuildHeap(fmt.Sprintf("%f", fieldValue.To()), field.Tag.Get("txt_heap_table"))
+				th = append(th, heaps...)
+				args = append(args, str)
+			case types.AEADTime:
+				fieldValue := entityValue.Field(i).Interface().(types.AEADTime)
+				str, heaps := l.BuildHeap(fieldValue.To().String(), field.Tag.Get("txt_heap_table"))
+				th = append(th, heaps...)
+				args = append(args, str)
+			case types.AEADBool:
+				fieldValue := entityValue.Field(i).Interface().(types.AEADBool)
+				str, heaps := l.BuildHeap(fmt.Sprintf("%t", fieldValue.To()), field.Tag.Get("txt_heap_table"))
+				th = append(th, heaps...)
+				args = append(args, str)
+			}
 		}
 		placeholders[i] = "$" + fmt.Sprint(i+1)
 	}
