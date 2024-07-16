@@ -70,28 +70,21 @@ func (l *Lib) InsertWithHeap(ctx context.Context, tx *sql.Tx, tableName string, 
 	}
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "))
 
-	fmt.Println(query)
-	fmt.Println(args)
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
 
-	for _, v := range th {
-		fmt.Println(v)
+	_, err = stmt.ExecContext(ctx, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute statement: %w", err)
 	}
 
-	// stmt, err := tx.PrepareContext(ctx, query)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to prepare statement: %w", err)
-	// }
-	// defer stmt.Close()
-
-	// _, err = stmt.ExecContext(ctx, args...)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to execute statement: %w", err)
-	// }
-
-	// err = l.SaveToHeap(ctx, tx, th)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to save to heap: %w", err)
-	// }
+	err = l.SaveToHeap(ctx, tx, th)
+	if err != nil {
+		return fmt.Errorf("failed to save to heap: %w", err)
+	}
 	return nil
 }
 
