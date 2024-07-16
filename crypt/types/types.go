@@ -14,6 +14,6 @@ type (
 	AEADFloat64 = sqlval.AEAD[float64, crypt.PrimitiveAEAD]
 	AEADTime    = sqlval.AEAD[time.Time, crypt.PrimitiveAEAD]
 	AEADInt64   = sqlval.AEAD[int64, crypt.PrimitiveAEAD]
-	BIDXString  = sqlval.BIDX[string, crypt.PrimitiveBIDX]
-	HMACString  = sqlval.HMAC[string, crypt.PrimitiveHMAC]
+	BIDXString  = sqlval.BIDX[string, crypt.PrimitiveBIDX] // deprecated
+	HMACString  = sqlval.HMAC[string, crypt.PrimitiveHMAC] // deprecated
 )

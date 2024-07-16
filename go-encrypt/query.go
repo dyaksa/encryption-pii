@@ -62,26 +62,36 @@ func (l *Lib) InsertWithHeap(ctx context.Context, tx *sql.Tx, tableName string, 
 			str, heaps := l.BuildHeap(fmt.Sprintf("%t", fieldValue.To()), field.Tag.Get("txt_heap_table"))
 			th = append(th, heaps...)
 			args = append(args, str)
+		case types.BIDXString:
+			fieldValue := entityValue.Field(i).Interface().(types.BIDXString)
+			args = append(args, fieldValue)
 		}
 		placeholders[i] = "$" + fmt.Sprint(i+1)
 	}
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "))
 
-	stmt, err := tx.PrepareContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("failed to prepare statement: %w", err)
-	}
-	defer stmt.Close()
+	fmt.Println(query)
+	fmt.Println(args)
 
-	_, err = stmt.ExecContext(ctx, args...)
-	if err != nil {
-		return fmt.Errorf("failed to execute statement: %w", err)
+	for _, v := range th {
+		fmt.Println(v)
 	}
 
-	err = l.SaveToHeap(ctx, tx, th)
-	if err != nil {
-		return fmt.Errorf("failed to save to heap: %w", err)
-	}
+	// stmt, err := tx.PrepareContext(ctx, query)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to prepare statement: %w", err)
+	// }
+	// defer stmt.Close()
+
+	// _, err = stmt.ExecContext(ctx, args...)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to execute statement: %w", err)
+	// }
+
+	// err = l.SaveToHeap(ctx, tx, th)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to save to heap: %w", err)
+	// }
 	return nil
 }
 
