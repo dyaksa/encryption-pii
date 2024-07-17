@@ -33,7 +33,7 @@ type TextHeap struct {
 	Hash    string
 }
 
-func InsertWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any) (err error) {
+func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity T) (a T, err error) {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 	var fieldNames []string
@@ -108,20 +108,20 @@ func InsertWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		return fmt.Errorf("failed to prepare statement: %w", err)
+		return a, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, args...)
+	err = stmt.QueryRowContext(ctx, args...).Scan(&a)
 	if err != nil {
-		return fmt.Errorf("failed to execute statement: %w", err)
+		return a, fmt.Errorf("failed to execute statement: %w", err)
 	}
 
 	err = SaveToHeap(ctx, tx, th)
 	if err != nil {
-		return fmt.Errorf("failed to save to heap: %w", err)
+		return a, fmt.Errorf("failed to save to heap: %w", err)
 	}
-	return nil
+	return a, nil
 }
 
 func UpdateWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, id string) error {
