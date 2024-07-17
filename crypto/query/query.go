@@ -33,7 +33,7 @@ type TextHeap struct {
 	Hash    string
 }
 
-func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity T) (a T, err error) {
+func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, generic T) (a T, err error) {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 	var fieldNames []string
@@ -104,15 +104,15 @@ func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx,
 		placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "), strings.Join(fieldNames, ", "))
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING id", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "))
 
-	// stmt, err := tx.PrepareContext(ctx, query)
-	// if err != nil {
-	// 	return a, fmt.Errorf("failed to prepare statement: %w", err)
-	// }
-	// defer stmt.Close()
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return a, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
 
-	err = tx.QueryRowContext(ctx, query, args...).Scan(&a)
+	err = stmt.QueryRowContext(ctx, args...).Scan(&a)
 	if err != nil {
 		return a, fmt.Errorf("failed to execute statement: %w", err)
 	}
