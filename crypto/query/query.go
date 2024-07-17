@@ -82,6 +82,61 @@ func InsertWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName
 	return nil
 }
 
+func UpdateWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, id string) error {
+	entityValue := reflect.ValueOf(entity)
+	entityType := entityValue.Type()
+
+	fieldNames := make([]string, entityType.NumField())
+	placeholders := make([]string, entityType.NumField())
+	args := make([]interface{}, entityType.NumField())
+
+	var th []TextHeap
+	for i := 0; i < entityType.NumField(); i++ {
+		field := entityType.Field(i)
+		fieldNames[i] = field.Tag.Get("db")
+		args[i] = entityValue.Field(i).Interface()
+
+		if field.Tag.Get("bidx_col") != "" {
+			fieldNames = append(fieldNames, field.Tag.Get("bidx_col"))
+			placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
+
+			switch entityValue.Field(i).Interface().(type) {
+			case types.AESChiper:
+				fieldValue := entityValue.Field(i).Interface().(types.AESChiper)
+				str, heaps := BuildHeap(c, fieldValue.To(), field.Tag.Get("txt_heap_table"))
+				th = append(th, heaps...)
+				args = append(args, str)
+			}
+		}
+		placeholders[i] = "$" + fmt.Sprint(i+1)
+	}
+
+	query := "UPDATE " + tableName + " SET "
+	for i, field := range fieldNames {
+		query += field + "=" + placeholders[i] + ", "
+	}
+	query = strings.TrimSuffix(query, ", ")
+	query += " WHERE id = '" + id + "'"
+
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute statement: %w", err)
+	}
+
+	err = SaveToHeap(ctx, tx, th)
+	if err != nil {
+		return fmt.Errorf("failed to save to heap: %w", err)
+	}
+
+	return nil
+}
+
 func BuildHeap(c *crypto.Crypto, value string, typeHeap string) (s string, th []TextHeap) {
 	var values = split(value)
 	builder := new(strings.Builder)
