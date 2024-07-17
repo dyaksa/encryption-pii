@@ -240,3 +240,123 @@ func AESChiper[A cipher.Block](aesFunc AESFunc[A], data string, alg AesAlg) AES[
 		v:   data,
 	}
 }
+
+func Encrypt(alg AesAlg, key []byte, plainData []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	switch alg {
+	case AesCBC:
+		plainDataPadded := PKCS5Padding(plainData)
+		cipherDataBytes := make([]byte, len(plainDataPadded)+aes.BlockSize)
+
+		err = GenerateRandomIV(cipherDataBytes[:aes.BlockSize])
+		if err != nil {
+			return nil, err
+		}
+
+		mode := cipher.NewCBCEncrypter(block, cipherDataBytes[:aes.BlockSize])
+		mode.CryptBlocks(cipherDataBytes[aes.BlockSize:], plainDataPadded)
+
+		dst := make([]byte, hex.EncodedLen(len(cipherDataBytes)))
+		hex.Encode(dst, cipherDataBytes)
+		return dst, nil
+	case AesCFB:
+		cipherDataBytes := make([]byte, len(plainData)+block.BlockSize())
+
+		err = GenerateRandomIV(cipherDataBytes[:block.BlockSize()])
+		if err != nil {
+			return nil, err
+		}
+
+		stream := cipher.NewCFBEncrypter(block, cipherDataBytes[:block.BlockSize()])
+		stream.XORKeyStream(cipherDataBytes[block.BlockSize():], plainData)
+
+		dst := make([]byte, hex.EncodedLen(len(cipherDataBytes)))
+		hex.Encode(dst, cipherDataBytes)
+		return dst, nil
+	case AesGCM:
+		aesGCM, err := cipher.NewGCM(block)
+		if err != nil {
+			return nil, err
+		}
+
+		cipherDataBytes := make([]byte, len(plainData)+aesGCM.NonceSize())
+
+		err = GenerateRandomIV(cipherDataBytes[:aesGCM.NonceSize()])
+		if err != nil {
+			return nil, err
+		}
+
+		res := aesGCM.Seal(nil, cipherDataBytes[:aesGCM.NonceSize()], plainData, nil)
+		cipherDataBytes = append(cipherDataBytes[:aesGCM.NonceSize()], res...)
+
+		dst := make([]byte, hex.EncodedLen(len(cipherDataBytes)))
+		hex.Encode(dst, cipherDataBytes)
+		return dst, nil
+	}
+
+	return nil, errors.New("encrypt process failed")
+}
+
+func Decrypt(alg AesAlg, key []byte, encryptedData []byte) ([]byte, error) {
+	encryptedDataOut := make([]byte, hex.DecodedLen(len(encryptedData)))
+	encryptedDataOutN, err := hex.Decode(encryptedDataOut, encryptedData)
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	switch alg {
+	case AesCBC:
+		if len(encryptedDataOut) < aes.BlockSize {
+			return nil, errors.New("encrypted data too short")
+		}
+
+		cipherDataBytes := encryptedDataOut[:encryptedDataOutN][aes.BlockSize:]
+		if len(cipherDataBytes)%aes.BlockSize != 0 {
+			return nil, errors.New("invalid padding: encrypted data is not a multiple of the block size")
+		}
+
+		nonceBytes := encryptedDataOut[:encryptedDataOutN][:aes.BlockSize]
+
+		mode := cipher.NewCBCDecrypter(block, nonceBytes)
+		mode.CryptBlocks(cipherDataBytes, cipherDataBytes)
+
+		cipherDataBytes, err = PKCS5UnPadding(cipherDataBytes)
+		if err != nil {
+			return nil, errors.New("invalid encrypted data or key")
+		}
+		return cipherDataBytes, nil
+	case AesCFB:
+		cipherDataBytes := encryptedDataOut[:encryptedDataOutN][aes.BlockSize:]
+		nonceBytes := encryptedDataOut[:encryptedDataOutN][:aes.BlockSize]
+
+		stream := cipher.NewCFBDecrypter(block, nonceBytes)
+		stream.XORKeyStream(cipherDataBytes, cipherDataBytes)
+		return cipherDataBytes, nil
+	case AesGCM:
+		aesGCM, err := cipher.NewGCM(block)
+		if err != nil {
+			return nil, err
+		}
+
+		cipherDataBytes := encryptedDataOut[:encryptedDataOutN][aesGCM.NonceSize():]
+		nonceBytes := encryptedDataOut[:encryptedDataOutN][:aesGCM.NonceSize()]
+
+		plainDataBytes, err := aesGCM.Open(nil, nonceBytes, cipherDataBytes, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		return plainDataBytes, nil
+	}
+
+	return nil, errors.New("decrypt process failed")
+}

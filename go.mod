@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/lib/pq v1.10.9
 	github.com/tink-crypto/tink-go v0.0.0-20230613075026-d6de17e3f164
 	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
