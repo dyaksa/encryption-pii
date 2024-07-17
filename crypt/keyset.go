@@ -48,8 +48,6 @@ func NewPrimitiveBIDXWithLen(len int) func(h *keyset.Handle) (p PrimitiveBIDX, e
 
 type PrimitiveHMAC struct{ HMAC }
 
-// NewPrimitiveHMAC creates a new instance of PrimitiveHMAC using the provided keyset handle.
-// It returns the created PrimitiveHMAC and any error encountered during the creation process.
 func NewPrimitiveHMAC(h *keyset.Handle) (p PrimitiveHMAC, err error) {
 	p.HMAC, err = NewHMAC(h)
 	return
