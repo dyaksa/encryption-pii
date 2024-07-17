@@ -32,6 +32,8 @@ func isValidKeySize(key []byte) bool {
 	return false
 }
 
+type Opts func(*Crypto) error
+
 type Crypto struct {
 	AESKey  *string `env:"AES_KEY,expand" json:"aes_key"`
 	HMACKey *string `env:"HMAC_KEY,expand" json:"hmac_key"`
@@ -42,7 +44,7 @@ type Crypto struct {
 	keySize AesKeySize
 }
 
-func New(keySize AesKeySize) (c *Crypto, err error) {
+func New(keySize AesKeySize, opts ...Opts) (c *Crypto, err error) {
 	c = &Crypto{
 		keySize: keySize,
 	}

@@ -36,7 +36,6 @@ type TextHeap struct {
 func InsertWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any) (err error) {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
-
 	var fieldNames []string
 	var args []interface{}
 	var placeholders []string
@@ -61,6 +60,42 @@ func InsertWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName
 				str, heaps := BuildHeap(c, fieldValue.To(), field.Tag.Get("txt_heap_table"))
 				th = append(th, heaps...)
 				args = append(args, str)
+			case types.NullUuid:
+				if fieldValue.Valid {
+					args = append(args, fieldValue.UUID)
+				} else {
+					args = append(args, nil)
+				}
+			case types.NullString:
+				if fieldValue.Valid {
+					args = append(args, fieldValue.String)
+				} else {
+					args = append(args, nil)
+				}
+			case types.NullTime:
+				if fieldValue.Valid {
+					args = append(args, fieldValue.Time)
+				} else {
+					args = append(args, nil)
+				}
+			case types.NullInt64:
+				if fieldValue.Valid {
+					args = append(args, fieldValue.Int64)
+				} else {
+					args = append(args, nil)
+				}
+			case types.NullFloat64:
+				if fieldValue.Valid {
+					args = append(args, fieldValue.Float64)
+				} else {
+					args = append(args, nil)
+				}
+			case types.NullBool:
+				if fieldValue.Valid {
+					args = append(args, fieldValue.Bool)
+				} else {
+					args = append(args, nil)
+				}
 			}
 		}
 		placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))

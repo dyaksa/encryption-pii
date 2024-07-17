@@ -88,9 +88,9 @@ func (h *HMAC[T, H]) Scan(value interface{}) error {
 	return nil
 }
 
-func HMACHash[H hash.Hash](hmacFun HmacFunc[H], data string) HMAC[string, H] {
+func HMACHash[H hash.Hash](hmacFunc HmacFunc[H], data string) HMAC[string, H] {
 	return HMAC[string, H]{
-		hmacFunc: hmacFun,
+		hmacFunc: hmacFunc,
 		btov:     func(v string) ([]byte, error) { return []byte(v), nil },
 		vtob:     func(b []byte) (string, error) { return string(b), nil },
 		v:        data,
