@@ -106,13 +106,13 @@ func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx,
 
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "), strings.Join(fieldNames, ", "))
 
-	stmt, err := tx.PrepareContext(ctx, query)
-	if err != nil {
-		return a, fmt.Errorf("failed to prepare statement: %w", err)
-	}
-	defer stmt.Close()
+	// stmt, err := tx.PrepareContext(ctx, query)
+	// if err != nil {
+	// 	return a, fmt.Errorf("failed to prepare statement: %w", err)
+	// }
+	// defer stmt.Close()
 
-	err = stmt.QueryRowContext(ctx, args...).Scan(&a)
+	err = tx.QueryRowContext(ctx, query, args...).Scan(&a)
 	if err != nil {
 		return a, fmt.Errorf("failed to execute statement: %w", err)
 	}
