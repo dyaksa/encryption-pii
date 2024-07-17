@@ -104,7 +104,7 @@ func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx,
 		placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "))
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "), strings.Join(fieldNames, ", "))
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
