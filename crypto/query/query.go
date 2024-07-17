@@ -37,29 +37,33 @@ func InsertWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 
-	fieldNames := make([]string, entityType.NumField())
-	placeholders := make([]string, entityType.NumField())
-	args := make([]interface{}, entityType.NumField())
+	var fieldNames []string
+	var args []interface{}
+	var placeholders []string
 
 	var th []TextHeap
 	for i := 0; i < entityType.NumField(); i++ {
 		field := entityType.Field(i)
-		fieldNames[i] = field.Tag.Get("db")
-		args[i] = entityValue.Field(i).Interface()
+		fieldName := field.Tag.Get("db")
+		if fieldName == "" {
+			continue
+		}
 
-		if field.Tag.Get("bidx_col") != "" {
-			fieldNames = append(fieldNames, field.Tag.Get("bidx_col"))
+		fieldNames = append(fieldNames, fieldName)
+		args = append(args, entityValue.Field(i).Interface())
+
+		if bidxCol := field.Tag.Get("bidx_col"); bidxCol != "" {
+			fieldNames = append(fieldNames, bidxCol)
 			placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 
-			switch entityValue.Field(i).Interface().(type) {
+			switch fieldValue := entityValue.Field(i).Interface().(type) {
 			case types.AESChiper:
-				fieldValue := entityValue.Field(i).Interface().(types.AESChiper)
 				str, heaps := BuildHeap(c, fieldValue.To(), field.Tag.Get("txt_heap_table"))
 				th = append(th, heaps...)
 				args = append(args, str)
 			}
 		}
-		placeholders[i] = "$" + fmt.Sprint(i+1)
+		placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 	}
 
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fieldNames, ", "), strings.Join(placeholders, ", "))
