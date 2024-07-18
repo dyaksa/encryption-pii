@@ -33,6 +33,10 @@ type TextHeap struct {
 	Hash    string
 }
 
+func GenerateSQLConditions(data any) (strs []string) {
+	return
+}
+
 func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, generic T) (a T, err error) {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
@@ -128,29 +132,72 @@ func UpdateWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 
-	fieldNames := make([]string, entityType.NumField())
-	placeholders := make([]string, entityType.NumField())
-	args := make([]interface{}, entityType.NumField())
+	var fieldNames []string
+	var placeholders []string
+	var args []interface{}
 
 	var th []TextHeap
 	for i := 0; i < entityType.NumField(); i++ {
 		field := entityType.Field(i)
-		fieldNames[i] = field.Tag.Get("db")
-		args[i] = entityValue.Field(i).Interface()
+		fieldName := field.Tag.Get("db")
+		if fieldName == "" {
+			continue
+		}
 
-		if field.Tag.Get("bidx_col") != "" {
-			fieldNames = append(fieldNames, field.Tag.Get("bidx_col"))
+		fieldNames = append(fieldNames, fieldName)
+		switch fieldValue := entityValue.Field(i).Interface().(type) {
+		case types.NullUuid:
+			if fieldValue.Valid {
+				args = append(args, fieldValue.UUID)
+			} else {
+				args = append(args, nil)
+			}
+		case types.NullString:
+			if fieldValue.Valid {
+				args = append(args, fieldValue.String)
+			} else {
+				args = append(args, nil)
+			}
+		case types.NullTime:
+			if fieldValue.Valid {
+				args = append(args, fieldValue.Time)
+			} else {
+				args = append(args, nil)
+			}
+		case types.NullInt64:
+			if fieldValue.Valid {
+				args = append(args, fieldValue.Int64)
+			} else {
+				args = append(args, nil)
+			}
+		case types.NullFloat64:
+			if fieldValue.Valid {
+				args = append(args, fieldValue.Float64)
+			} else {
+				args = append(args, nil)
+			}
+		case types.NullBool:
+			if fieldValue.Valid {
+				args = append(args, fieldValue.Bool)
+			} else {
+				args = append(args, nil)
+			}
+		default:
+			args = append(args, fieldValue)
+		}
+
+		if bidxCol := field.Tag.Get("bidx_col"); bidxCol != "" {
+			fieldNames = append(fieldNames, bidxCol)
 			placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 
-			switch entityValue.Field(i).Interface().(type) {
+			switch fieldValue := entityValue.Field(i).Interface().(type) {
 			case types.AESChiper:
-				fieldValue := entityValue.Field(i).Interface().(types.AESChiper)
 				str, heaps := BuildHeap(c, fieldValue.To(), field.Tag.Get("txt_heap_table"))
 				th = append(th, heaps...)
 				args = append(args, str)
 			}
 		}
-		placeholders[i] = "$" + fmt.Sprint(i+1)
+		placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 	}
 
 	query := "UPDATE " + tableName + " SET "
