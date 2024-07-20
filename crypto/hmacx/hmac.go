@@ -96,3 +96,45 @@ func HMACHash[H hash.Hash](hmacFunc HmacFunc[H], data string) HMAC[string, H] {
 		v:        data,
 	}
 }
+
+type To[T any, H hash.Hash] struct {
+	b []byte
+}
+
+func (h HMAC[T, H]) Hash() To[T, H] {
+	t := To[T, H]{}
+	m, err := h.hmacFunc()
+	if err != nil {
+		return t
+	}
+
+	b, err := h.btov(h.v)
+	if err != nil {
+		return t
+	}
+
+	_, err = m.Write(b)
+	if err != nil {
+		return t
+	}
+
+	t.b = m.Sum(nil)
+	return t
+}
+
+func (t To[T, H]) ToString() string {
+	return fmt.Sprintf("%x", t.b)
+}
+
+func (t To[T, H]) ToBytes() []byte {
+	return t.b
+}
+
+func (t To[T, H]) ToLast8DigitValue() string {
+	str := fmt.Sprintf("%x", t.b)
+	if len(str) > 8 {
+		return str[len(str)-8:]
+	}
+
+	return str
+}

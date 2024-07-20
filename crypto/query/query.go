@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/dyaksa/encryption-pii/crypto"
+	"github.com/dyaksa/encryption-pii/crypto/hmacx"
 	"github.com/dyaksa/encryption-pii/crypto/types"
 	"github.com/google/uuid"
 )
@@ -34,6 +35,20 @@ type TextHeap struct {
 }
 
 func GenerateSQLConditions(data any) (strs []string) {
+	entityValue := reflect.ValueOf(data)
+	entityType := entityValue.Type()
+
+	for i := 0; i < entityType.NumField(); i++ {
+		field := entityType.Field(i)
+		bidxCol := field.Tag.Get("bidx_col")
+		value := entityValue.Field(i).Interface()
+
+		if bidxCol == "" {
+			continue
+		}
+
+		strs = append(strs, bidxCol+" ILIKE "+"'%"+value.(string)+"%'")
+	}
 	return
 }
 
@@ -276,11 +291,11 @@ func BuildHeap(c *crypto.Crypto, value string, typeHeap string) (s string, th []
 	var values = split(value)
 	builder := new(strings.Builder)
 	for _, value := range values {
-		builder.WriteString(c.Hash(value))
+		builder.WriteString(hmacx.HMACHash(c.HMACFunc(), value).Hash().ToLast8DigitValue())
 		th = append(th, TextHeap{
 			Content: strings.ToLower(value),
 			Type:    typeHeap,
-			Hash:    c.Hash(value),
+			Hash:    hmacx.HMACHash(c.HMACFunc(), value).Hash().ToLast8DigitValue(),
 		})
 	}
 	return builder.String(), th
