@@ -1,4 +1,4 @@
-package query
+package crypto
 
 import (
 	"context"
@@ -8,37 +8,66 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/dyaksa/encryption-pii/crypto"
 	"github.com/dyaksa/encryption-pii/crypto/hmacx"
 	"github.com/dyaksa/encryption-pii/crypto/types"
 	"github.com/google/uuid"
 )
 
-// Deprecated: any is deprecated. Use interface{} instead.
+type Entity interface{}
+
+type Database interface {
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+}
+
+func QueryContext[D Database, T Entity](ctx context.Context, db D, baseQuery string, queryParams []interface{}, iOptInitFunc func(*T), IOptInitValue func(T)) (t []T, err error) {
+	rows, err := db.QueryContext(ctx, baseQuery, queryParams...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var i T
+		if iOptInitFunc != nil {
+			iOptInitFunc(&i)
+		}
+
+		colums := structToInterfaceScan(&i)
+		err = rows.Scan(colums...)
+
+		if err != nil {
+			return
+		}
+
+		if IOptInitValue != nil {
+			IOptInitValue(i)
+		}
+
+		t = append(t, i)
+	}
+	return
+}
+
 type FindTextHeapByHashParams struct {
 	Hash string
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 type FindTextHeapRow struct {
 	ID      uuid.UUID
 	Content string
 	Hash    string
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 type FindTextHeapByContentParams struct {
 	Content string
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 type TextHeap struct {
 	Content string
 	Type    string
 	Hash    string
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func BuildQueryLike(ctx context.Context, tx *sql.Tx, data any, cond string) (str string, err error) {
 	entityValue := reflect.ValueOf(data)
 	entityType := entityValue.Type()
@@ -80,7 +109,6 @@ func BuildQueryLike(ctx context.Context, tx *sql.Tx, data any, cond string) (str
 	return
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func GenerateSQLConditions(data any) (strs []string) {
 	entityValue := reflect.ValueOf(data)
 	entityType := entityValue.Type()
@@ -100,8 +128,7 @@ func GenerateSQLConditions(data any) (strs []string) {
 	return
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
-func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, generic T) (a T, err error) {
+func InsertWithHeap[T Entity](c *Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, generic T) (a T, err error) {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 	var fieldNames []string
@@ -192,8 +219,7 @@ func InsertWithHeap[T Entity](c *crypto.Crypto, ctx context.Context, tx *sql.Tx,
 	return a, nil
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
-func UpdateWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, id string) error {
+func UpdateWithHeap(c *Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, id string) error {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 
@@ -291,16 +317,11 @@ func UpdateWithHeap(c *crypto.Crypto, ctx context.Context, tx *sql.Tx, tableName
 	return nil
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
-type Entity interface{}
-
-// Deprecated: any is deprecated. Use interface{} instead.
 type ILikeParams struct {
 	ColumnHeap string
 	Hash       []string
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func QueryLike[T Entity](ctx context.Context, basQuery string, tx *sql.Tx, iOptionalFilter func(*ILikeParams), iOptInitFunc func(*T)) (t []T, err error) {
 	var args []interface{}
 	if iOptionalFilter != nil {
@@ -340,8 +361,7 @@ func QueryLike[T Entity](ctx context.Context, basQuery string, tx *sql.Tx, iOpti
 	return
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
-func BuildHeap(c *crypto.Crypto, value string, typeHeap string) (s string, th []TextHeap) {
+func BuildHeap(c *Crypto, value string, typeHeap string) (s string, th []TextHeap) {
 	var values = split(value)
 	builder := new(strings.Builder)
 	for _, value := range values {
@@ -355,7 +375,6 @@ func BuildHeap(c *crypto.Crypto, value string, typeHeap string) (s string, th []
 	return builder.String(), th
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func SearchContents(ctx context.Context, tx *sql.Tx, table string, args FindTextHeapByContentParams) (heaps []string, err error) {
 	var query = new(strings.Builder)
 	query.WriteString("SELECT content, hash FROM ")
@@ -382,7 +401,6 @@ func SearchContents(ctx context.Context, tx *sql.Tx, table string, args FindText
 	return
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func SaveToHeap(ctx context.Context, tx *sql.Tx, textHeaps []TextHeap) (err error) {
 	for _, th := range textHeaps {
 		query := new(strings.Builder)
@@ -396,7 +414,6 @@ func SaveToHeap(ctx context.Context, tx *sql.Tx, textHeaps []TextHeap) (err erro
 	return
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func isHashExist(ctx context.Context, tx *sql.Tx, typeHeap string, args FindTextHeapByHashParams) (bool, error) {
 	var query = new(strings.Builder)
 	query.WriteString("SELECT hash FROM ")
@@ -414,7 +431,6 @@ func isHashExist(ctx context.Context, tx *sql.Tx, typeHeap string, args FindText
 	return false, nil
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func split(value string) (s []string) {
 	var sep = " "
 	reg := "[a-zA-Z0-9]+"
@@ -431,7 +447,6 @@ func split(value string) (s []string) {
 	return
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func validateEmail(email string) bool {
 	// Define the email regex pattern
 	const emailRegexPattern = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
@@ -443,7 +458,6 @@ func validateEmail(email string) bool {
 	return re.MatchString(email)
 }
 
-// Deprecated: any is deprecated. Use interface{} instead.
 func buildLikeQuery(column, baseQuery string, terms []string) (string, []interface{}) {
 	var likeClauses []string
 	var args []interface{}
@@ -456,4 +470,15 @@ func buildLikeQuery(column, baseQuery string, terms []string) (string, []interfa
 	fullQuery := fmt.Sprintf("%s WHERE %s", baseQuery, strings.Join(likeClauses, " OR "))
 
 	return fullQuery, args
+}
+
+func structToInterfaceScan(v interface{}) []interface{} {
+	s := reflect.ValueOf(v).Elem()
+	numCols := s.NumField()
+	columns := make([]interface{}, numCols)
+	for i := 0; i < numCols; i++ {
+		field := s.Field(i)
+		columns[i] = field.Addr().Interface()
+	}
+	return columns
 }
