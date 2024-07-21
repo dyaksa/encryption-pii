@@ -34,6 +34,47 @@ type TextHeap struct {
 	Hash    string
 }
 
+func BuildQueryLike(ctx context.Context, tx *sql.Tx, data any, cond string) (str string, err error) {
+	entityValue := reflect.ValueOf(data)
+	entityType := entityValue.Type()
+
+	for i := 0; i < entityType.NumField(); i++ {
+		field := entityType.Field(i)
+		bidxCol := field.Tag.Get("bidx_col")
+		heapCol := field.Tag.Get("txt_heap_table")
+		value := entityValue.Field(i).Interface()
+
+		var query = new(strings.Builder)
+		query.WriteString("SELECT content, hash FROM ")
+		query.WriteString(heapCol)
+		query.WriteString(" WHERE content ILIKE $1")
+
+		rows, err := tx.QueryContext(ctx, query.String(), "%"+value.(string)+"%")
+		if err != nil {
+			return "", err
+		}
+
+		var heaps []string
+		for rows.Next() {
+			var i FindTextHeapRow
+			err = rows.Scan(&i.Content, &i.Hash)
+			if err != nil {
+				return "", err
+			}
+
+			heaps = append(heaps, i.Hash)
+		}
+
+		var like []string
+		for _, heap := range heaps {
+			like = append(like, bidxCol+" ILIKE "+"'%"+heap+"%'")
+		}
+
+		str = strings.Join(like, " "+cond+" ")
+	}
+	return
+}
+
 func GenerateSQLConditions(data any) (strs []string) {
 	entityValue := reflect.ValueOf(data)
 	entityType := entityValue.Type()
@@ -49,6 +90,7 @@ func GenerateSQLConditions(data any) (strs []string) {
 
 		strs = append(strs, bidxCol+" ILIKE "+"'%"+value.(string)+"%'")
 	}
+
 	return
 }
 
@@ -311,13 +353,18 @@ func SearchContents(ctx context.Context, tx *sql.Tx, table string, args FindText
 		return
 	}
 	defer rows.Close()
+
+	seen := make(map[string]interface{})
 	for rows.Next() {
 		var i FindTextHeapRow
 		err = rows.Scan(&i.Content, &i.Hash)
 		if err != nil {
 			return
 		}
-		heaps = append(heaps, i.Hash)
+		if _, exist := seen[i.Hash]; !exist {
+			heaps = append(heaps, i.Hash)
+			seen[i.Hash] = struct{}{}
+		}
 	}
 	return
 }

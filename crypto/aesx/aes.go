@@ -54,6 +54,7 @@ var _ interface {
 	sql.Scanner
 	driver.Value
 } = &AES[any, cipher.Block]{}
+
 var _ AESFunc[core.PrimitiveAES] = (*core.KeySet[core.PrimitiveAES])(nil).GetPrimitiveFunc()
 
 type AESFunc[A cipher.Block] func() (A, error)
@@ -214,9 +215,9 @@ func (s *AES[T, A]) Scan(src any) (err error) {
 
 		s.v, err = s.vtob(plainData)
 		return err
+	default:
+		return errors.New("invalid algorithm")
 	}
-
-	return errors.New("invalid algorithm")
 }
 
 func (s AES[T, A]) To() T {
