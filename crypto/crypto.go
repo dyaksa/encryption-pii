@@ -124,8 +124,8 @@ func (c *Crypto) Encrypt(data string, alg aesx.AesAlg) aesx.AES[string, core.Pri
 	return aesx.AESChiper(c.AESFunc(), data, alg)
 }
 
-func (c *Crypto) Decrypt(data string, alg aesx.AesAlg) aesx.AES[string, core.PrimitiveAES] {
-	return aesx.AESChiper(c.AESFunc(), data, alg)
+func (c *Crypto) Decrypt(alg aesx.AesAlg) aesx.AES[string, core.PrimitiveAES] {
+	return aesx.AESChiper(c.AESFunc(), "", alg)
 }
 
 func (c *Crypto) HMACFunc() func() (core.PrimitiveHMAC, error) {
