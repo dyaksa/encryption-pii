@@ -153,7 +153,7 @@ func (c *Crypto) BindHeap(entity any) (err error) {
 			txtHeapTable := field.Tag.Get("txt_heap_table")
 
 			switch originalValue := entityValue.FieldByName(plainTextFieldName).Interface().(type) {
-			case types.AESChiper:
+			case types.AESCipher:
 				str, heaps := c.buildHeap(originalValue.To(), txtHeapTable)
 				err = c.saveToHeap(context.Background(), c.dbHeapPsql, heaps)
 				if err != nil {
@@ -256,7 +256,7 @@ func InsertWithHeap[T Entity](c *Crypto, ctx context.Context, tx *sql.Tx, tableN
 			placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 
 			switch fieldValue := entityValue.Field(i).Interface().(type) {
-			case types.AESChiper:
+			case types.AESCipher:
 				str, heaps := buildHeap(c, fieldValue.To(), field.Tag.Get("txt_heap_table"))
 				th = append(th, heaps...)
 				args = append(args, str)
@@ -350,7 +350,7 @@ func UpdateWithHeap(c *Crypto, ctx context.Context, tx *sql.Tx, tableName string
 			placeholders = append(placeholders, "$"+fmt.Sprint(len(placeholders)+1))
 
 			switch fieldValue := entityValue.Field(i).Interface().(type) {
-			case types.AESChiper:
+			case types.AESCipher:
 				str, heaps := buildHeap(c, fieldValue.To(), field.Tag.Get("txt_heap_table"))
 				th = append(th, heaps...)
 				args = append(args, str)

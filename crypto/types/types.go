@@ -7,6 +7,6 @@ import (
 )
 
 type (
-	AESChiper = aesx.AES[string, core.PrimitiveAES]
+	AESCipher = aesx.AES[string, core.PrimitiveAES]
 	HMACHash  = hmacx.HMAC[string, core.PrimitiveHMAC]
 )
