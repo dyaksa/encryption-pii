@@ -35,7 +35,7 @@ func QueryContext[D Database, T Entity](ctx context.Context, db D, baseQuery str
 			iOptInitFunc(&i)
 		}
 
-		colums := structToInterfaceScan(&i)
+		colums := StructToInterfaceScan(&i)
 		err = rows.Scan(colums...)
 
 		if err != nil {
@@ -555,7 +555,7 @@ func buildLikeQuery(column, baseQuery string, terms []string) (string, []interfa
 	return fullQuery, args
 }
 
-func structToInterfaceScan(v interface{}) []interface{} {
+func StructToInterfaceScan(v interface{}) []interface{} {
 	s := reflect.ValueOf(v).Elem()
 	numCols := s.NumField()
 	columns := make([]interface{}, numCols)
