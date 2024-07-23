@@ -1,12 +1,15 @@
 package crypto
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/dyaksa/encryption-pii/cmd"
 	"github.com/dyaksa/encryption-pii/crypto/aesx"
 	"github.com/dyaksa/encryption-pii/crypto/core"
 	"github.com/dyaksa/encryption-pii/crypto/hmacx"
+	_ "github.com/lib/pq"
 )
 
 type (
@@ -32,8 +35,6 @@ func isValidKeySize(key []byte) bool {
 	return false
 }
 
-type Opts func(*Crypto) error
-
 type Crypto struct {
 	AESKey  *string `env:"AES_KEY,expand" json:"aes_key"`
 	HMACKey *string `env:"HMAC_KEY,expand" json:"hmac_key"`
@@ -41,10 +42,18 @@ type Crypto struct {
 	aes  *core.KeySet[core.PrimitiveAES]
 	hmac *core.KeySet[core.PrimitiveHMAC]
 
+	Host *string `env:"HEAP_DB_HOST" envDefault:"localhost" json:"db_host"`
+	Port *string `env:"HEAP_DB_PORT" envDefault:"5432" json:"db_port"`
+	User *string `env:"HEAP_DB_USER" envDefault:"user" json:"db_user"`
+	Pass *string `env:"HEAP_DB_PASS" envDefault:"password" json:"db_pass"`
+	Name *string `env:"HEAP_DB_NAME" envDefault:"dbname" json:"db_name"`
+
+	dbHeapPsql *sql.DB
+
 	keySize AesKeySize
 }
 
-func New(keySize AesKeySize, opts ...Opts) (c *Crypto, err error) {
+func New(keySize AesKeySize) (c *Crypto, err error) {
 	c = &Crypto{
 		keySize: keySize,
 	}
@@ -61,6 +70,22 @@ func New(keySize AesKeySize, opts ...Opts) (c *Crypto, err error) {
 	c.initHMAC()
 
 	return c, nil
+}
+
+func (c *Crypto) InitHeapDatabase() (*sql.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		*c.Host, *c.Port, *c.User, *c.Pass, *c.Name)
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	c.dbHeapPsql = db
+	return db, nil
 }
 
 func (c *Crypto) initEnv() error {
