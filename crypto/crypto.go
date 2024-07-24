@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dyaksa/encryption-pii/cmd"
 	"github.com/dyaksa/encryption-pii/crypto/aesx"
 	"github.com/dyaksa/encryption-pii/crypto/core"
 	"github.com/dyaksa/encryption-pii/crypto/hmacx"
@@ -115,7 +114,7 @@ func (c *Crypto) InitHeapDatabase() (*sql.DB, error) {
 }
 
 func (c *Crypto) initEnv() error {
-	return cmd.EnvLoader(c, cmd.OptionsEnv{DotEnv: true, Prefix: "CRYPTO_"})
+	return envLoader(c, OptionsEnv{DotEnv: true, Prefix: "CRYPTO_"})
 }
 
 func (c *Crypto) initAES() {
