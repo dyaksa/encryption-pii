@@ -28,9 +28,9 @@ go get gitlab.playcourt.id/fab-digital/libs/backend/pii-agent-go@v.1.0.0
 ### To Give key credential .env
 
 ```sh
-CRYPTO_AES_KEY=f4b12p114njaysl4lu&g0nt1bagryd3v
+CRYPTO_AES_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-CRYPTO_HMAC_KEY=f4b12p114njaysl4lu&g0nt1bagryd3v
+CRYPTO_HMAC_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 ### To Give Key credential .env for Heap Database
