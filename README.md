@@ -14,13 +14,13 @@ To give Git credentials, you’ll need to have a .netrc that includes gitlab.pla
 ### Installation
 
 ```sh
-go get gitlab.playcourt.id/fab-digital/libs/backend/pii-agent-go@latest
+go get github.com/dyaksa/encryption-pii@latest
 ```
 
 ### Upgrade or downgrade with tag version if available
 
 ```sh
-go get gitlab.playcourt.id/fab-digital/libs/backend/pii-agent-go@v.1.0.0
+go get github.com/dyaksa/encryption-pii@v.1.0.0
 ```
 
 ## Initialization
