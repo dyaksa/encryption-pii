@@ -166,6 +166,38 @@ func (c *Crypto) BindHeap(entity any) (err error) {
 	return nil
 }
 
+func (c *Crypto) SearchContents(ctx context.Context, table string, args func(*FindTextHeapByContentParams)) (heaps []string, err error) {
+	var query = new(strings.Builder)
+	query.WriteString("SELECT content, hash FROM ")
+	query.WriteString(table)
+	query.WriteString(" WHERE content LIKE $1")
+
+	var params FindTextHeapByContentParams
+	if args != nil {
+		args(&params)
+	}
+
+	rows, err := c.dbHeapPsql.QueryContext(ctx, query.String(), "%"+strings.ToLower(params.Content)+"%")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	seen := make(map[string]interface{})
+	for rows.Next() {
+		var i FindTextHeapRow
+		err = rows.Scan(&i.Content, &i.Hash)
+		if err != nil {
+			return
+		}
+		if _, exist := seen[i.Hash]; !exist {
+			heaps = append(heaps, i.Hash)
+			seen[i.Hash] = struct{}{}
+		}
+	}
+	return
+}
+
 func (c *Crypto) saveToHeap(ctx context.Context, db *sql.DB, textHeaps []TextHeap) (err error) {
 	for _, th := range textHeaps {
 		query := new(strings.Builder)
@@ -194,7 +226,7 @@ func (c *Crypto) buildHeap(value string, typeHeap string) (s string, th []TextHe
 }
 
 // Deprecated: any is deprecated. Use interface{} instead.
-func InsertWithHeap[T Entity](c *Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, generic T) (a T, err error) {
+func insertWithHeap[T Entity](c *Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, generic T) (a T, err error) {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 	var fieldNames []string
@@ -287,7 +319,7 @@ func InsertWithHeap[T Entity](c *Crypto, ctx context.Context, tx *sql.Tx, tableN
 }
 
 // Deprecated: any is deprecated. Use interface{} instead.
-func UpdateWithHeap(c *Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, id string) error {
+func updateWithHeap(c *Crypto, ctx context.Context, tx *sql.Tx, tableName string, entity any, id string) error {
 	entityValue := reflect.ValueOf(entity)
 	entityType := entityValue.Type()
 
@@ -443,7 +475,8 @@ func buildHeap(c *Crypto, value string, typeHeap string) (s string, th []TextHea
 	return builder.String(), th
 }
 
-func SearchContents(ctx context.Context, tx *sql.Tx, table string, args FindTextHeapByContentParams) (heaps []string, err error) {
+// deprecated function
+func searchContents(ctx context.Context, tx *sql.Tx, table string, args FindTextHeapByContentParams) (heaps []string, err error) {
 	var query = new(strings.Builder)
 	query.WriteString("SELECT content, hash FROM ")
 	query.WriteString(table)
