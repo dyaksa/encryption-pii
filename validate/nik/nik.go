@@ -59,17 +59,18 @@ func IsValid(nik string) bool {
 		return false
 	}
 
-	validProvince := includes(convertProvinceDataToBoolMap(validate.PROVINCE_DATA), validNik[1])
-	if !validProvince {
-		return false
-	}
+	// validProvince := includes(convertProvinceDataToBoolMap(validate.PROVINCE_DATA), validNik[1])
+	// if !validProvince {
+	// 	return false
+	// }
 
 	cBirthday := reformatBirthday(validNik[4])
 
 	_, err := formatDate("19" + cBirthday)
 	validBirthday := err == nil
 
-	return validProvince && validBirthday
+	// return validProvince && validBirthday
+	return validBirthday
 }
 
 func includes(array map[string]bool, key string) bool {
