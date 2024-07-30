@@ -228,6 +228,15 @@ func (s AES[T, A]) ToP() *T {
 	return &s.v
 }
 
+func (s AES[T, A]) Byte() []byte {
+	b, err := s.btov(s.v)
+	if err != nil {
+		return nil
+	}
+
+	return b
+}
+
 func AESChiper[A cipher.Block](aesFunc AESFunc[A], data string, alg AesAlg) AES[string, A] {
 	return AES[string, A]{
 		aesFunc: aesFunc,
