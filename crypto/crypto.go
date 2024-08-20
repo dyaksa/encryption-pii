@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/dyaksa/encryption-pii/crypto/aesx"
+	"github.com/dyaksa/encryption-pii/crypto/config"
 	"github.com/dyaksa/encryption-pii/crypto/core"
 	"github.com/dyaksa/encryption-pii/crypto/hmacx"
 	_ "github.com/lib/pq"
@@ -54,25 +55,6 @@ func WithInitHeapConnection() Opts {
 	}
 }
 
-func PrivateKey(aesKey string, hmacKey string) Opts {
-	return func(c *Crypto) error {
-		c.AESKey = &aesKey
-		c.HMACKey = &hmacKey
-		return nil
-	}
-}
-
-func SetupManualHeapConnection(host, port, user, pass, name string) Opts {
-	return func(c *Crypto) error {
-		c.Host = &host
-		c.Port = &port
-		c.User = &user
-		c.Pass = &pass
-		c.Name = &name
-		return nil
-	}
-}
-
 type Crypto struct {
 	AESKey  *string `env:"AES_KEY,expand" json:"aes_key"`
 	HMACKey *string `env:"HMAC_KEY,expand" json:"hmac_key"`
@@ -92,13 +74,23 @@ type Crypto struct {
 }
 
 func New(keySize AesKeySize, opts ...Opts) (c *Crypto, err error) {
+	config := config.InitConfig()
 	c = &Crypto{
+		Host: &config.Host,
+		Port: &config.Port,
+		User: &config.User,
+		Pass: &config.Pass,
+		Name: &config.Name,
+
+		AESKey:  &config.AesKey,
+		HMACKey: &config.HmacKey,
+
 		keySize: keySize,
 	}
 
-	if err = c.initEnv(); err != nil {
-		return nil, err
-	}
+	// if err = c.initEnv(); err != nil {
+	// 	return nil, err
+	// }
 
 	for _, opt := range opts {
 		if err = opt(c); err != nil {
