@@ -7,9 +7,7 @@ import (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
-		panic(err)
-	}
+	godotenv.Load()
 }
 
 const (

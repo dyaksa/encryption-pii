@@ -75,6 +75,7 @@ type Crypto struct {
 
 func New(keySize AesKeySize, opts ...Opts) (c *Crypto, err error) {
 	config := config.InitConfig()
+
 	c = &Crypto{
 		Host: &config.Host,
 		Port: &config.Port,
