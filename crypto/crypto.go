@@ -54,6 +54,25 @@ func WithInitHeapConnection() Opts {
 	}
 }
 
+func PrivateKey(aesKey string, hmacKey string) Opts {
+	return func(c *Crypto) error {
+		c.AESKey = &aesKey
+		c.HMACKey = &hmacKey
+		return nil
+	}
+}
+
+func SetupManualHeapConnection(host, port, user, pass, name string) Opts {
+	return func(c *Crypto) error {
+		c.Host = &host
+		c.Port = &port
+		c.User = &user
+		c.Pass = &pass
+		c.Name = &name
+		return nil
+	}
+}
+
 type Crypto struct {
 	AESKey  *string `env:"AES_KEY,expand" json:"aes_key"`
 	HMACKey *string `env:"HMAC_KEY,expand" json:"hmac_key"`

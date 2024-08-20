@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"reflect"
 
 	"github.com/dyaksa/encryption-pii/crypto/core"
 )
@@ -59,7 +60,7 @@ var _ AESFunc[core.PrimitiveAES] = (*core.KeySet[core.PrimitiveAES])(nil).GetPri
 
 type AESFunc[A cipher.Block] func() (A, error)
 
-type AES[T any, A cipher.Block] struct {
+type AES[T interface{ *struct{} | any }, A cipher.Block] struct {
 	aesFunc AESFunc[A]
 	btov    func(T) ([]byte, error)
 	vtob    func([]byte) (T, error)
@@ -69,6 +70,10 @@ type AES[T any, A cipher.Block] struct {
 }
 
 func (s AES[T, A]) Value() (driver.Value, error) {
+	if reflect.ValueOf(s.v).IsNil() {
+		return nil, nil
+	}
+
 	a, err := s.aesFunc()
 	if err != nil {
 		return nil, err
