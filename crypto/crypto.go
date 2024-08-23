@@ -89,10 +89,6 @@ func New(keySize AesKeySize, opts ...Opts) (c *Crypto, err error) {
 		keySize: keySize,
 	}
 
-	// if err = c.initEnv(); err != nil {
-	// 	return nil, err
-	// }
-
 	for _, opt := range opts {
 		if err = opt(c); err != nil {
 			return nil, err

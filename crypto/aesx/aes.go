@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"reflect"
 
 	"github.com/dyaksa/encryption-pii/crypto/core"
 )
@@ -70,10 +69,6 @@ type AES[T interface{ *struct{} | any }, A cipher.Block] struct {
 }
 
 func (s AES[T, A]) Value() (driver.Value, error) {
-	if reflect.ValueOf(s.v).IsNil() {
-		return nil, nil
-	}
-
 	a, err := s.aesFunc()
 	if err != nil {
 		return nil, err
