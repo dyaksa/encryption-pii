@@ -1,6 +1,6 @@
 module github.com/dyaksa/encryption-pii
 
-go 1.22.1
+go 1.23
 
 require (
 	github.com/caarlos0/env/v11 v11.1.0
