@@ -7,6 +7,7 @@ import (
 )
 
 type (
-	AESCipher = aesx.AES[string, core.PrimitiveAES]
-	HMACHash  = hmacx.HMAC[string, core.PrimitiveHMAC]
+	AESCipher     = aesx.AES[string, core.PrimitiveAES]
+	AESCipherJSON = aesx.AES[map[string]interface{}, core.PrimitiveAES]
+	HMACHash      = hmacx.HMAC[string, core.PrimitiveHMAC]
 )

@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 
@@ -226,6 +227,22 @@ func (s AES[T, A]) To() T {
 
 func (s AES[T, A]) ToP() *T {
 	return &s.v
+}
+
+func AESCipherJSON[A cipher.Block, T any](aesFunc AESFunc[A], data T, alg AesAlg) AES[T, A] {
+	return AES[T, A]{
+		aesFunc: aesFunc,
+		btov: func(t T) ([]byte, error) {
+			return json.Marshal(t)
+		},
+		vtob: func(b []byte) (T, error) {
+			pt := new(T)
+			err := json.Unmarshal(b, pt)
+			return *pt, err
+		},
+		v:   data,
+		alg: alg,
+	}
 }
 
 func AESChiper[A cipher.Block](aesFunc AESFunc[A], data string, alg AesAlg) AES[string, A] {
