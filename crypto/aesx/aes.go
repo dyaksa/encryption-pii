@@ -13,6 +13,8 @@ import (
 	"io"
 
 	"github.com/dyaksa/encryption-pii/crypto/core"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 type (
@@ -219,6 +221,22 @@ func (s *AES[T, A]) Scan(src any) (err error) {
 	default:
 		return errors.New("invalid algorithm")
 	}
+}
+
+func (AES[T, A]) GormDataType() string {
+	return "bytea"
+}
+
+type AESDataType struct{}
+
+func (AESDataType) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "mysql", "sqlite":
+		return "BLOB"
+	case "postgres":
+		return "BYTEA"
+	}
+	return ""
 }
 
 func (s AES[T, A]) To() T {
