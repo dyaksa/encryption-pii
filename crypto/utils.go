@@ -215,7 +215,7 @@ func (c *Crypto) buildHeap(value string, typeHeap string) (s string, th []TextHe
 	var values = split(value)
 	builder := new(strings.Builder)
 	for _, value := range values {
-		builder.WriteString(hmacx.HMACHash(c.HMACFunc(), value).Hash().ToLast8DigitValue())
+		builder.WriteString(hmacx.HMACHash(c.HMACFunc(), strings.ToLower(value)).Hash().ToLast8DigitValue())
 		th = append(th, TextHeap{
 			Content: strings.ToLower(value),
 			Type:    typeHeap,
@@ -465,7 +465,7 @@ func buildHeap(c *Crypto, value string, typeHeap string) (s string, th []TextHea
 	var values = split(value)
 	builder := new(strings.Builder)
 	for _, value := range values {
-		builder.WriteString(hmacx.HMACHash(c.HMACFunc(), value).Hash().ToLast8DigitValue())
+		builder.WriteString(hmacx.HMACHash(c.HMACFunc(), strings.ToLower(value)).Hash().ToLast8DigitValue())
 		th = append(th, TextHeap{
 			Content: strings.ToLower(value),
 			Type:    typeHeap,
