@@ -219,7 +219,7 @@ func (c *Crypto) buildHeap(value string, typeHeap string) (s string, th []TextHe
 		th = append(th, TextHeap{
 			Content: strings.ToLower(value),
 			Type:    typeHeap,
-			Hash:    hmacx.HMACHash(c.HMACFunc(), value).Hash().ToLast8DigitValue(),
+			Hash:    hmacx.HMACHash(c.HMACFunc(), strings.ToLower(value)).Hash().ToLast8DigitValue(),
 		})
 	}
 	return builder.String(), th
@@ -461,6 +461,7 @@ func QueryLike[T Entity](ctx context.Context, basQuery string, tx *sql.Tx, iOpti
 	return
 }
 
+// deprecated function
 func buildHeap(c *Crypto, value string, typeHeap string) (s string, th []TextHeap) {
 	var values = split(value)
 	builder := new(strings.Builder)
@@ -502,6 +503,7 @@ func searchContents(ctx context.Context, tx *sql.Tx, table string, args FindText
 	return
 }
 
+// deprecated function
 func saveToHeap(ctx context.Context, db *sql.DB, textHeaps []TextHeap) (err error) {
 	for _, th := range textHeaps {
 		query := new(strings.Builder)
