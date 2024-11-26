@@ -12,7 +12,6 @@ import (
 	"errors"
 	"io"
 
-	"github.com/dyaksa/encryption-pii/crypto/config"
 	"github.com/dyaksa/encryption-pii/crypto/core"
 )
 
@@ -380,9 +379,8 @@ func Decrypt(alg AesAlg, key []byte, encryptedData []byte) ([]byte, error) {
 	return nil, errors.New("decrypt process failed")
 }
 
-func Encrypted(alg AesAlg, plainData string) ([]byte, error) {
-	aesKey := config.GetAESKey()
-	block, err := aes.NewCipher([]byte(aesKey))
+func Encrypted(alg AesAlg, key string, plainData string) ([]byte, error) {
+	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return nil, err
 	}
@@ -441,15 +439,14 @@ func Encrypted(alg AesAlg, plainData string) ([]byte, error) {
 	return nil, errors.New("encrypt process failed")
 }
 
-func Decrypted(alg AesAlg, encryptedData []byte) (string, error) {
-	aesKey := config.GetAESKey()
+func Decrypted(alg AesAlg, key string, encryptedData []byte) (string, error) {
 	encryptedDataOut := make([]byte, hex.DecodedLen(len(encryptedData)))
 	encryptedDataOutN, err := hex.Decode(encryptedDataOut, encryptedData)
 	if err != nil {
 		return "", err
 	}
 
-	block, err := aes.NewCipher([]byte(aesKey))
+	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", err
 	}
