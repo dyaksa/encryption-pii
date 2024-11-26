@@ -48,3 +48,11 @@ func InitConfig() *Config {
 		Name: getEnv(Name),
 	}
 }
+
+func GetAESKey() string {
+	return getEnv(AesKey)
+}
+
+func GetHMACKey() string {
+	return getEnv(HmacKey)
+}
