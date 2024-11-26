@@ -121,10 +121,6 @@ func (c *Crypto) InitHeapDatabase() (*sql.DB, error) {
 	return db, nil
 }
 
-func (c *Crypto) initEnv() error {
-	return envLoader(c, OptionsEnv{DotEnv: true, Prefix: "CRYPTO_"})
-}
-
 func (c *Crypto) initAES() {
 	if c.AESKey == nil {
 		c.aes = nil
