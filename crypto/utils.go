@@ -10,9 +10,6 @@ import (
 
 	"github.com/dyaksa/encryption-pii/crypto/hmacx"
 	"github.com/dyaksa/encryption-pii/crypto/types"
-	"github.com/dyaksa/encryption-pii/validate/nik"
-	"github.com/dyaksa/encryption-pii/validate/npwp"
-	"github.com/dyaksa/encryption-pii/validate/phone"
 	"github.com/google/uuid"
 )
 
@@ -540,22 +537,9 @@ func split(value string) (s []string) {
 	regex := regexp.MustCompile(reg)
 	switch {
 	case validateEmail(value):
-		sep = "@"
-	case phone.IsValid((value)):
-		parse, err := phone.Parse(value)
-		if err != nil {
-			return
-		}
-		value = parse.ToString()
-		sep = "-"
-	case nik.IsValid((value)) || npwp.IsValid((value)):
-		parse, err := nik.Parse(value)
-		if err != nil {
-			return
-		}
-		value = parse.ToString()
-		sep = "."
+		sep = "@" // email
 	}
+
 	parts := strings.Split(value, sep)
 	for _, part := range parts {
 		matches := regex.FindAllString(part, -1)
