@@ -225,6 +225,23 @@ func (s AES[T, A]) To() T {
 	return s.v
 }
 
+func (s AES[T, A]) ToMask() string {
+	switch v := any(s.v).(type) {
+	case string:
+		if len(v) > 2 {
+			return v[:2] + "**********"
+		}
+		return v
+	default:
+		return ""
+	}
+}
+
+func (s AES[T, A]) ToMaskP() *string {
+	mask := s.ToMask()
+	return &mask
+}
+
 func (s AES[T, A]) ToP() *T {
 	return &s.v
 }
