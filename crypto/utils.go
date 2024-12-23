@@ -10,6 +10,9 @@ import (
 
 	"github.com/dyaksa/encryption-pii/crypto/hmacx"
 	"github.com/dyaksa/encryption-pii/crypto/types"
+	"github.com/dyaksa/encryption-pii/validate/nik"
+	"github.com/dyaksa/encryption-pii/validate/npwp"
+	"github.com/dyaksa/encryption-pii/validate/phone"
 	"github.com/google/uuid"
 )
 
@@ -144,7 +147,24 @@ func (c *Crypto) BindHeap(entity any) (err error) {
 
 	for i := 0; i < entityType.NumField(); i++ {
 		field := entityType.Field(i)
-		if _, ok := field.Tag.Lookup("txt_heap_table"); ok {
+		switch true {
+		case getTagField(field, "full_text_search"):
+			plainTextFieldName := field.Name[:len(field.Name)-4]
+			bidxField := entityValue.FieldByName(field.Name)
+			fullTextSearch := field.Tag.Get("full_text_search")
+			if fullTextSearch == "true" {
+				switch originalValue := entityValue.FieldByName(plainTextFieldName).Interface().(type) {
+				case types.AESCipher:
+					hash := hmacx.HMACHash(c.HMACFunc(), strings.ToLower(originalValue.To())).Hash().ToString()
+					if err != nil {
+						return fmt.Errorf("failed to encrypt: %w", err)
+					}
+					bidxField.SetString(hash)
+				}
+				return
+			}
+			continue
+		case getTagField(field, "txt_heap_table"):
 			plainTextFieldName := field.Name[:len(field.Name)-4]
 			bidxField := entityValue.FieldByName(field.Name)
 			txtHeapTable := field.Tag.Get("txt_heap_table")
@@ -158,9 +178,18 @@ func (c *Crypto) BindHeap(entity any) (err error) {
 				}
 				bidxField.SetString(str)
 			}
+		default:
+			continue
 		}
 	}
 	return nil
+}
+
+func getTagField(ref reflect.StructField, key string) bool {
+	if _, ok := ref.Tag.Lookup(key); ok {
+		return true
+	}
+	return false
 }
 
 func (c *Crypto) SearchContents(ctx context.Context, table string, args func(*FindTextHeapByContentParams)) (heaps []string, err error) {
@@ -538,6 +567,20 @@ func split(value string) (s []string) {
 	switch {
 	case validateEmail(value):
 		sep = "@" // email
+	case phone.IsValid(value):
+		parse, err := phone.Parse(value)
+		if err != nil {
+			return
+		}
+		value = parse.ToString()
+		sep = "-"
+	case nik.IsValid(value) || npwp.IsValid(value):
+		parse, err := nik.Parse(value)
+		if err != nil {
+			return
+		}
+		value = parse.ToString()
+		sep = "."
 	}
 
 	parts := strings.Split(value, sep)

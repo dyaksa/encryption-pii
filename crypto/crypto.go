@@ -164,3 +164,7 @@ func (c *Crypto) HMACFunc() func() (core.PrimitiveHMAC, error) {
 func (c *Crypto) Hash(data string) string {
 	return hmacx.HMACHash(c.HMACFunc(), data).HashString()
 }
+
+func (c *Crypto) HashString(data string) string {
+	return hmacx.HMACHash(c.HMACFunc(), data).Hash().ToString()
+}
