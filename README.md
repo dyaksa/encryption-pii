@@ -4,12 +4,8 @@ This project focuses on encrypting Personally Identifiable Information (PII) usi
 
 ## Features
 
-- Encryption and decryption of PII data
-- Easy integration with go applications
-
-## Getting Started
-
-To give Git credentials, you’ll need to have a .netrc that includes gitlab.playcourt.id in your home directory.
+- `Encryption` and decryption of PII data
+- `Easy integration` with go applications
 
 ### Installation
 
@@ -85,6 +81,15 @@ func main() {
 ## Example
 
 for reference to the use of pii implementation can check ([Example](https://github.com/dyaksa/go_restapi))
+
+# Contributing
+
+- Fork the repository.
+- Create a new branch for your feature or bugfix.
+- Commit your changes and push them to your fork.
+- Create a Pull Request describing your changes.
+
+We appreciate all contributions, whether they are documentation improvements, bug fixes, or new features!
 
 ## Authors
 
