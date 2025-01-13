@@ -138,6 +138,10 @@ func (s AES[T, A]) Value() (driver.Value, error) {
 
 func (s *AES[T, A]) Scan(src any) (err error) {
 	if src == nil {
+		s.v, err = s.vtob([]byte{})
+		if err != nil {
+			return
+		}
 		return
 	}
 
