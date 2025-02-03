@@ -149,6 +149,16 @@ func (c *Crypto) AESFunc() func() (core.PrimitiveAES, error) {
 	return c.aes.GetPrimitiveFunc()
 }
 
+func (c *Crypto) AesWithKeyFunc(key []byte) func() (core.PrimitiveAES, error) {
+	if !isValidKeySize(key) {
+		return func() (core.PrimitiveAES, error) {
+			return core.PrimitiveAES{}, errors.New("invalid key size")
+		}
+	}
+
+	return c.aes.GetPrimitiveWithKeyFunc(key)
+}
+
 func (c *Crypto) Encrypt(data string, alg aesx.AesAlg) aesx.AES[string, core.PrimitiveAES] {
 	return aesx.AESChiper(c.AESFunc(), data, alg)
 }

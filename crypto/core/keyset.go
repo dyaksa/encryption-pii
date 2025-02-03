@@ -83,3 +83,13 @@ func (k *KeySet[T]) GetPrimitiveFunc() func() (T, error) {
 func (k *KeySet[T]) GetPrimitive() (T, error) {
 	return k.constructur(k.key)
 }
+
+func (k *KeySet[T]) GetPrimitiveWithKeyFunc(key []byte) func() (T, error) {
+	return func() (T, error) {
+		return k.GetPrimitiveWithKey(key)
+	}
+}
+
+func (k *KeySet[T]) GetPrimitiveWithKey(key []byte) (T, error) {
+	return k.constructur(key)
+}
