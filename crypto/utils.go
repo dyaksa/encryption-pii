@@ -196,14 +196,14 @@ func (c *Crypto) SearchContents(ctx context.Context, table string, args func(*Fi
 	var query = new(strings.Builder)
 	query.WriteString("SELECT content, hash FROM ")
 	query.WriteString(table)
-	query.WriteString(` WHERE (content ILIKE "%" || $1 || "%")`)
+	query.WriteString(` WHERE content ILIKE $1`)
 
 	var params FindTextHeapByContentParams
 	if args != nil {
 		args(&params)
 	}
 
-	rows, err := c.dbHeapPsql.QueryContext(ctx, query.String(), strings.ToLower(params.Content))
+	rows, err := c.dbHeapPsql.QueryContext(ctx, query.String(), "%"+strings.ToLower(params.Content)+"%")
 	if err != nil {
 		return
 	}

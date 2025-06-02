@@ -138,14 +138,3 @@ func (t To[T, H]) ToLast8DigitValue() string {
 
 	return str
 }
-
-func Hash(data string, key []byte) (string, error) {
-	h, err := core.NewHMAC(key)
-	if err != nil {
-		return "", err
-	}
-
-	h.Hash.Write([]byte(data))
-
-	return fmt.Sprintf("%x", h.Hash.Sum(nil)), nil
-}
