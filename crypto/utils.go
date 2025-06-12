@@ -14,6 +14,7 @@ import (
 	"github.com/dyaksa/encryption-pii/validate/npwp"
 	"github.com/dyaksa/encryption-pii/validate/phone"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type Entity interface{}
@@ -62,7 +63,8 @@ type FindTextHeapRow struct {
 }
 
 type FindTextHeapByContentParams struct {
-	Content string
+	Content  string
+	Patterns []string
 }
 
 type TextHeap struct {
@@ -194,19 +196,26 @@ func getTagField(ref reflect.StructField, key string) bool {
 
 func (c *Crypto) SearchContents(ctx context.Context, table string, args func(*FindTextHeapByContentParams)) (heaps []string, err error) {
 	var query = new(strings.Builder)
-	query.WriteString("SELECT content, hash FROM ")
-	query.WriteString(table)
-	query.WriteString(` WHERE content ILIKE $1`)
-
+	var rows = new(sql.Rows)
 	var params FindTextHeapByContentParams
 	if args != nil {
 		args(&params)
 	}
 
-	rows, err := c.dbHeapPsql.QueryContext(ctx, query.String(), "%"+strings.ToLower(params.Content)+"%")
+	query.WriteString("SELECT content, hash FROM ")
+	query.WriteString(table)
+	query.WriteString(` WHERE content ILIKE ANY ($1::text[])`)
+
+	contents := strings.Split(strings.ToLower(params.Content), " ")
+	if params.Patterns != nil {
+		contents = append(contents, params.Patterns...)
+	}
+
+	rows, err = c.dbHeapPsql.QueryContext(ctx, query.String(), pq.Array(contents))
 	if err != nil {
 		return
 	}
+
 	defer rows.Close()
 
 	seen := make(map[string]interface{})
